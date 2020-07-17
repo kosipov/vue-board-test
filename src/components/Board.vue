@@ -1,0 +1,172 @@
+<template>
+        <div id="board">
+            <md-layout v-for="result in results.data" v-bind:key="result">
+                <md-list>
+                    <md-subheader> {{result.value}}
+                        <div :class="{'count-color' : result.tasks.length >= 4 && result.id ===2}">
+                            {{ "("+ result.tasks.length+ ")"}}
+                        </div>
+                    </md-subheader>
+                    <md-list-item v-for="(task, key) in result.tasks" v-bind:key="key" @click.prevent.stop="handleClick($event, task)">
+                        <div :class="{'completed' : task.accepted}">{{task.text}}</div>
+                    </md-list-item>
+                    <md-field md-inline v-if="result.id === 1">
+                        <label>Input task</label>
+                        <md-input v-model="text" @change="createTask()"></md-input>
+                    </md-field>
+                </md-list>
+            </md-layout>
+            <md-progress-spinner md-mode="indeterminate" v-show="barDisplay"></md-progress-spinner>
+            <vue-simple-context-menu
+                    :elementId="'context-board-menu'"
+                    :options="options"
+                    :ref="'vueSimpleContextMenu'"
+                    @option-clicked="optionClicked"/>
+        </div>
+</template>
+
+<script>
+  import * as axios from "axios";
+  import Vue from 'vue'
+  import VueMaterial from 'vue-material'
+  import 'vue-material/dist/vue-material.min.css'
+  import 'vue-material/dist/theme/default.css'
+  import 'vue-simple-context-menu/dist/vue-simple-context-menu.css'
+  import VueSimpleContextMenu from 'vue-simple-context-menu'
+
+  
+  Vue.component('vue-simple-context-menu', VueSimpleContextMenu)
+
+  Vue.use(VueMaterial)
+
+  export default {
+    name: 'Board',
+    data() {
+      return {
+        results: [],
+        barDisplay: false,
+        options: [
+          {
+            name: 'Done',
+            do: 'done'
+          },
+          {
+            name: 'Remove',
+            do: 'remove'
+          },
+          {
+            name: 'Move to urgent',
+            do: 'move'
+          }],
+      };
+    },
+    mounted: function () {
+      this.init();
+    },
+
+    methods: {
+      init() {
+        axios.get('http://board.test/api/boards').then(response => {
+          this.results = response.data
+        })
+      },
+      createTask() {
+        let formData = new FormData();
+        formData.append('text', this.text);
+        formData.append('board_id', 1);
+        this.barDisplay = true;
+        axios.post('http://board.test/api/tasks', formData)
+          .then(response => {
+            if (response.status == 200) {
+              this.text = '';
+              this.init();
+              this.barDisplay = false;
+            }
+          })
+          .catch(e => {
+            this.errors.push(e)
+          })
+      },
+      handleClick(event, item) {
+        this.$refs.vueSimpleContextMenu.showMenu(event, item)
+      },
+
+      optionClicked(event) {
+        switch (event.option.do) {
+          case "done":
+            this.modifyTask({accepted: 1}, event.item);
+            break;
+          case "remove":
+            this.deleteTask(event.item);
+            break;
+          case "move":
+
+            this.modifyTask({board_id: 2 == event.item.board_id ? 1 : 2}, event.item);
+            break;
+        }
+      },
+
+      modifyTask(values, element) {
+        let formData = new FormData();
+        for (let item in values)
+        {
+          formData.set(item, values[item]);
+        }
+        formData.append("_method", "put");
+        this.barDisplay = true;
+        axios.post('http://board.test/api/tasks/' + element.id+'/', formData,
+          {headers:  {'Content-Type': 'application/json' }} )
+          .then(response => {
+            if (response.status == 200) {
+              this.init();
+              this.barDisplay = false;
+            }
+          })
+          .catch(e => {
+            this.errors.push(e)
+          })
+      },
+
+      deleteTask(element)
+      {
+        let formData = new FormData();
+        formData.append("_method", "delete");
+        this.barDisplay = true;
+        axios.post('http://board.test/api/tasks/' + element.id+'/', formData,
+          {headers:  {'Content-Type': 'application/json' }} )
+          .then(response => {
+            if (response.status == 200) {
+              this.init();
+              this.barDisplay = false;
+            }
+          })
+          .catch(e => {
+            this.errors.push(e)
+          })
+      },
+    }
+  }
+</script>
+
+<style lang="scss" scoped>
+    .md-list {
+        width: 320px;
+        max-width: 100%;
+        display: inline-block;
+        vertical-align: top;
+        border: 1px solid rgba(#000, .12);
+    }
+
+    .md-progress-spinner {
+        position: relative;
+        margin-left: 50%;
+        margin-right: 50%;
+    }
+    .completed {
+        text-decoration: line-through;
+    }
+    .count-color {
+        color: red;
+    }
+
+</style>
