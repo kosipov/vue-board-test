@@ -9,7 +9,7 @@
                 <md-list-item v-for="(task, key) in result.tasks" v-bind:key="key" @click.prevent.stop="handleClick($event, task)">
                     <div :class="{'completed' : task.accepted}">{{task.text}}</div>
                 </md-list-item>
-                <md-field md-inline v-if="result.id === 1">
+                <md-field md-inline v-if="result.value === 'Todos'">
                     <label>Input task</label>
                     <md-input v-model="text" @change="createTask()"></md-input>
                 </md-field>
