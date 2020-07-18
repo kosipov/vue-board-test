@@ -1,27 +1,25 @@
 <template>
         <div id="board">
-            <md-layout v-for="result in results.data" v-bind:key="result">
-                <md-list>
-                    <md-subheader> {{result.value}}
-                        <div :class="{'count-color' : result.tasks.length >= 4 && result.id ===2}">
-                            {{ "("+ result.tasks.length+ ")"}}
-                        </div>
-                    </md-subheader>
-                    <md-list-item v-for="(task, key) in result.tasks" v-bind:key="key" @click.prevent.stop="handleClick($event, task)">
-                        <div :class="{'completed' : task.accepted}">{{task.text}}</div>
-                    </md-list-item>
-                    <md-field md-inline v-if="result.id === 1">
-                        <label>Input task</label>
-                        <md-input v-model="text" @change="createTask()"></md-input>
-                    </md-field>
-                </md-list>
-            </md-layout>
-            <md-progress-spinner md-mode="indeterminate" v-show="barDisplay"></md-progress-spinner>
+            <md-list v-for="(result, id) in results.data" v-bind:key="id" class="md-triple-line">
+                <md-subheader> {{result.value}}
+                    <div :class="{'count-color' : result.tasks.length >= 4 && result.id ===2}">
+                        {{ "("+ result.tasks.length+ ")"}}
+                    </div>
+                </md-subheader>
+                <md-list-item v-for="(task, key) in result.tasks" v-bind:key="key" @click.prevent.stop="handleClick($event, task)">
+                    <div :class="{'completed' : task.accepted}">{{task.text}}</div>
+                </md-list-item>
+                <md-field md-inline v-if="result.id === 1">
+                    <label>Input task</label>
+                    <md-input v-model="text" @change="createTask()"></md-input>
+                </md-field>
+            </md-list>
             <vue-simple-context-menu
                     :elementId="'context-board-menu'"
                     :options="options"
                     :ref="'vueSimpleContextMenu'"
                     @option-clicked="optionClicked"/>
+            <md-progress-spinner md-mode="indeterminate" v-show="barDisplay"></md-progress-spinner>
         </div>
 </template>
 
@@ -58,6 +56,7 @@
             name: 'Move to urgent',
             do: 'move'
           }],
+        text: ''
       };
     },
     mounted: function () {
@@ -66,7 +65,7 @@
 
     methods: {
       init() {
-        axios.get('http://board.test/api/boards').then(response => {
+        axios.get(process.env.VUE_APP_API_URL+'/boards').then(response => {
           this.results = response.data
         })
       },
@@ -75,7 +74,7 @@
         formData.append('text', this.text);
         formData.append('board_id', 1);
         this.barDisplay = true;
-        axios.post('http://board.test/api/tasks', formData)
+        axios.post(process.env.VUE_APP_API_URL+'/tasks', formData)
           .then(response => {
             if (response.status == 200) {
               this.text = '';
@@ -114,7 +113,7 @@
         }
         formData.append("_method", "put");
         this.barDisplay = true;
-        axios.post('http://board.test/api/tasks/' + element.id+'/', formData,
+        axios.post(process.env.VUE_APP_API_URL+'/tasks/' + element.id+'/', formData,
           {headers:  {'Content-Type': 'application/json' }} )
           .then(response => {
             if (response.status == 200) {
@@ -132,7 +131,7 @@
         let formData = new FormData();
         formData.append("_method", "delete");
         this.barDisplay = true;
-        axios.post('http://board.test/api/tasks/' + element.id+'/', formData,
+        axios.post(process.env.VUE_APP_API_URL+'/tasks/' + element.id+'/', formData,
           {headers:  {'Content-Type': 'application/json' }} )
           .then(response => {
             if (response.status == 200) {
@@ -158,15 +157,24 @@
     }
 
     .md-progress-spinner {
-        position: relative;
-        margin-left: 50%;
-        margin-right: 50%;
+        position: fixed;
+        left: 50%;
+        top: 50%;
     }
     .completed {
         text-decoration: line-through;
     }
     .count-color {
         color: red;
+    }
+
+    .container {
+        display: flex;
+    }
+
+    .column {
+        display: flex;
+        flex-direction: column;
     }
 
 </style>
