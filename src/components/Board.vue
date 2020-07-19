@@ -53,7 +53,7 @@
             do: 'remove'
           },
           {
-            name: 'Move to urgent',
+            name: 'Move',
             do: 'move'
           }],
         text: ''
