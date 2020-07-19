@@ -67,6 +67,8 @@
       init() {
         axios.get(process.env.VUE_APP_API_URL+'/boards').then(response => {
           this.results = response.data
+        }). catch(response => {
+          console.log(response);
         })
       },
       createTask() {
@@ -113,7 +115,7 @@
         }
         formData.append("_method", "put");
         this.barDisplay = true;
-        axios.post(process.env.VUE_APP_API_URL+'/tasks/' + element.id+'/', formData,
+        axios.post(process.env.VUE_APP_API_URL+'/tasks/' + element.id, formData,
           {headers:  {'Content-Type': 'application/json' }} )
           .then(response => {
             if (response.status == 200) {
@@ -131,7 +133,7 @@
         let formData = new FormData();
         formData.append("_method", "delete");
         this.barDisplay = true;
-        axios.post(process.env.VUE_APP_API_URL+'/tasks/' + element.id+'/', formData,
+        axios.post(process.env.VUE_APP_API_URL+'/tasks/' + element.id, formData,
           {headers:  {'Content-Type': 'application/json' }} )
           .then(response => {
             if (response.status == 200) {
