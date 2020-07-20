@@ -68,7 +68,6 @@
         axios.get(process.env.VUE_APP_API_URL+'/boards').then(response => {
           this.results = response.data
         }). catch(response => {
-          console.log(response);
         })
       },
       createTask() {
@@ -101,7 +100,6 @@
             this.deleteTask(event.item);
             break;
           case "move":
-
             this.modifyTask({board_id: 2 == event.item.board_id ? 1 : 2}, event.item);
             break;
         }
