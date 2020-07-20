@@ -67,7 +67,8 @@
       init() {
         axios.get(process.env.VUE_APP_API_URL+'/boards').then(response => {
           this.results = response.data
-        }). catch(response => {
+        }). catch(e => {
+          this.errors.push(e)
         })
       },
       createTask() {
